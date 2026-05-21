@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WealthFlow Pro — Smart Expense Tracker</title>
+  <!-- Google Fonts & Chart.js / jsPDF Core Engines -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-canvas">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="orb orb4"></div>
+    <div class="orb orb5"></div>
+  </div>
+  <div class="grain"></div>
+  <div class="shimmer-line"></div>
+
+  <div class="wrapper">
+    <!-- HEADER -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">💰</div>
+        <div>
+          <div class="logo-text">WealthFlow Pro</div>
+          <div class="logo-sub">Smart Expense Intelligence</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="date-badge" id="dateDisplay"></div>
+        <button class="btn-pdf" onclick="exportPDF()">📄 Export PDF Report</button>
+      </div>
+    </header>
+
+    <!-- BUDGET ALERT BANNER -->
+    <div class="budget-alert" id="budgetAlert">
+      <div class="alert-top">
+        <div class="alert-icon">🚨</div>
+        <div>
+          <div class="alert-title">Monthly Budget Exceeded!</div>
+          <div class="alert-sub" id="alertSub">Your expenses have crossed the set limit.</div>
+        </div>
+      </div>
+      <div class="suggestions" id="alertSuggestions"></div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats">
+      <div class="stat-card balance">
+        <div class="stat-label">Net Balance</div>
+        <div class="stat-amount" id="balanceAmt">₹0</div>
+        <div class="stat-change" id="balanceNote">Add your first transaction</div>
+        <div class="stat-icon">⚖️</div>
+      </div>
+      <div class="stat-card income">
+        <div class="stat-label">Total Income</div>
+        <div class="stat-amount" id="incomeAmt">₹0</div>
+        <div class="stat-change" id="incomeTxCount">0 transactions</div>
+        <div class="stat-icon">📈</div>
+      </div>
+      <div class="stat-card expense">
+        <div class="stat-label">Total Expenses</div>
+        <div class="stat-amount" id="expenseAmt">₹0</div>
+        <div class="stat-change" id="expenseTxCount">0 transactions</div>
+        <div class="stat-icon">📉</div>
+      </div>
+      <div class="stat-card score">
+        <div class="stat-label">Health Score</div>
+        <div class="stat-amount" id="healthScore">—</div>
+        <div class="stat-change" id="healthLabel">No data yet</div>
+        <div class="score-ring-wrap">
+          <svg class="score-ring" viewBox="0 0 52 52">
+            <circle class="score-ring-bg" cx="26" cy="26" r="22"/>
+            <circle class="score-ring-fill" id="scoreRingFill" cx="26" cy="26" r="22"
+              stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke="#5b9cf6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANIMATED PROGRESS RINGS -->
+    <div class="rings-row">
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 80 80">
+          <circle class="ring-svg-bg" cx="40" cy="40" r="32"/>
+          <circle class="ring-svg-fill" id="ring1" cx="40" cy="40" r="32"
+            stroke-dasharray="201.1" stroke-dashoffset="201.1" stroke="var(--red)"/>
+        </svg>
+        <div class="ring-info">
+          <div class="ring-label">Budget Used</div>
+          <div class="ring-pct" id="ring1pct" style="color:var(--red)">0%</div>
+          <div class="ring-sub" id="ring1sub">Set a budget to track</div>
+        </div>
+      </div>
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 80 80">
+          <circle class="ring-svg-bg" cx="40" cy="40" r="32"/>
+          <circle class="ring-svg-fill" id="ring2" cx="40" cy="40" r="32"
+            stroke-dasharray="201.1" stroke-dashoffset="201.1" stroke="var(--green)"/>
+        </svg>
+        <div class="ring-info">
+          <div class="ring-label">Savings Progress</div>
+          <div class="ring-pct" id="ring2pct" style="color:var(--green)">0%</div>
+          <div class="ring-sub" id="ring2sub">Income vs Expense ratio</div>
+        </div>
+      </div>
+      <div class="ring-card">
+        <svg class="ring-svg" viewBox="0 0 80 80">
+          <circle class="ring-svg-bg" cx="40" cy="40" r="32"/>
+          <circle class="ring-svg-fill" id="ring3" cx="40" cy="40" r="32"
+            stroke-dasharray="201.1" stroke-dashoffset="201.1" stroke="var(--gold)"/>
+        </svg>
+        <div class="ring-info">
+          <div class="ring-label">Monthly Goal</div>
+          <div class="ring-pct" id="ring3pct" style="color:var(--gold)">0%</div>
+          <div class="ring-sub" id="ring3sub">Days elapsed this month</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+      <!-- LEFT: FORM -->
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Add Transaction</div>
+          </div>
+          <div class="panel-body">
+            <!-- Budget bar -->
+            <div class="budget-bar-wrap">
+              <div class="budget-bar-top">
+                <span style="color:var(--muted)">Monthly Budget</span>
+                <span id="budgetDisplay" style="color:var(--gold);font-weight:600;cursor:pointer" onclick="openBudgetModal()">Set Budget ✏️</span>
+              </div>
+              <div class="budget-bar-track">
+                <div class="budget-bar-fill" id="budgetBarFill" style="width:0%;background:var(--green)"></div>
+              </div>
+              <div style="font-size:.72rem;color:var(--muted);margin-top:5px" id="budgetBarLabel">No budget set</div>
+            </div>
+            <div class="tabs">
+              <button class="tab income active" id="tabIncome" onclick="switchTab('income')">＋ Income</button>
+              <button class="tab expense" id="tabExpense" onclick="switchTab('expense')">－ Expense</button>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="txDesc" placeholder="e.g. Monthly Salary…" maxlength="50"/>
+            </div>
+            <div class="form-group">
+              <label>Amount (₹)</label>
+              <div class="amount-wrap">
+                <span class="currency">₹</span>
+                <input type="number" id="txAmount" placeholder="0" min="0" step="0.01"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="txCategory"><option value="">Select category…</option></select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="txDate"/>
+            </div>
+            <button class="btn-add income-btn" id="addBtn" onclick="addTransaction()">+ Add Income</button>
+            <div class="gold-divider"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:.76rem;color:var(--muted)">All data saved locally 🔒</span>
+              <button onclick="clearAll()" style="background:none;border:none;color:var(--red);font-size:.76rem;cursor:pointer;font-family:'DM Sans',sans-serif">Clear All</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUGGESTIONS PANEL -->
+        <div class="suggestions-panel" id="suggPanel">
+          <div class="sugg-header">
+            <div class="sugg-title">💡 Smart Reduction Tips</div>
+            <div class="sugg-sub">AI-powered suggestions to optimise your spending</div>
+          </div>
+          <div class="sugg-list" id="suggList"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT COL -->
+      <div class="right-col">
+        <!-- ANALYTICS -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Analytics</div>
+            <div class="chart-tabs">
+              <button class="ct active" onclick="switchChartTab('overview',this)">Overview</button>
+              <button class="ct" onclick="switchChartTab('monthly',this)">Monthly</button>
+              <button class="ct" onclick="switchChartTab('weekly',this)">Weekly</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <!-- Overview -->
+            <div id="chartOverview">
+              <div class="chart-grid">
+                <div class="chart-box">
+                  <div class="chart-label">Income vs Expense</div>
+                  <canvas id="barChart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <div class="chart-label">Expense Breakdown</div>
+                  <canvas id="donutChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <!-- Monthly -->
+            <div id="chartMonthly" style="display:none">
+              <div class="chart-grid">
+                <div class="chart-box full">
+                  <div class="chart-label">Monthly Spending Trend (Last 6 Months)</div>
+                  <canvas id="trendChart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <div class="chart-label">This Month vs Last Month</div>
+                  <canvas id="compareChart"></canvas>
+                </div>
+                <div class="chart-box">
+                  <div class="chart-label">Category Distribution</div>
+                  <canvas id="catChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <!-- Weekly -->
+            <div id="chartWeekly" style="display:none">
+              <div class="chart-grid">
+                <div class="chart-box full">
+                  <div class="chart-label">Weekly Expenses (This Month)</div>
+                  <canvas id="weekChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSACTIONS -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Transactions</div>
+            <div class="tx-filter">
+              <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+              <button class="filter-btn" onclick="setFilter('income',this)">Income</button>
+              <button class="filter-btn" onclick="setFilter('expense',this)">Expense</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="tx-list" id="txList"></div>
+          </div>
+        </div>
+      </div><!-- /right-col -->
+    </div><!-- /main-grid -->
+  </div><!-- /wrapper -->
+
+  <!-- BUDGET MODAL -->
+  <div class="modal-overlay" id="budgetModal">
+    <div class="modal">
+      <h3>Set Monthly Budget</h3>
+      <p>Define your spending limit for the month. You'll get a warning when you approach or exceed it.</p>
+      <div class="form-group">
+        <label>Budget Amount (₹)</label>
+        <div class="amount-wrap">
+          <span class="currency">₹</span>
+          <input type="number" id="budgetInput" placeholder="e.g. 15000" min="1"/>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeBudgetModal()">Cancel</button>
+        <button class="btn-confirm" onclick="saveBudget()">Save Budget</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Main JavaScript File -->
+  <script src="script.js"></script>
+</body>
+</html>
